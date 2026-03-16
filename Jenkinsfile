@@ -20,10 +20,7 @@ pipeline {
         stage('SonarQube Analysis'){
             steps{
                 withSonarQubeEnv('SonarQube-server') {
-                        sh 'mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=devsecops-project-key \
-                        -Dsonar.host.url=$sonarurl \
-                        -Dsonar.login=$sonarlogin'
+                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key'
                 }
             }
         }
