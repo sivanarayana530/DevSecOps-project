@@ -13,6 +13,9 @@ In this project, I created an end-to-end CI/CD pipeline while keeping in mind Se
 
 The script will automatically start all services and provide access details!
 
+## 🌐 Access Your Application
+After the CI/CD pipeline completes successfully, your Spring Boot app will be deployed to Kubernetes and accessible at: **http://localhost:30080**
+
 ## Project Architecture
 ![](https://github.com/praveensirvi1212/DevSecOps-project/blob/main/Images/architecture.png)
 
