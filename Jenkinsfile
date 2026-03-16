@@ -40,12 +40,12 @@ pipeline {
         }
         stage('Image Scan') {
             steps {
-      	        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workspace aquasec/trivy:latest image --format template --template "@contrib/html.tpl" -o /workspace/report.html praveensirvi/sprint-boot-app:latest'
+      	        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workspace aquasec/trivy:latest image --format json -o /workspace/report.json praveensirvi/sprint-boot-app:latest || true'
             }
         }
         stage('Store Scan report locally') {
               steps {
-                  sh 'mkdir -p reports && cp report.html reports/'
+                  sh 'mkdir -p reports && cp report.json reports/'
               }
          }
         stage('Docker  Push') {
