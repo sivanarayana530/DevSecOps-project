@@ -2,6 +2,16 @@
 
 In this project, I created an end-to-end CI/CD pipeline while keeping in mind Securities Best Practices, DevSecOps principles and used all these tools *Git, GitHub , Jenkins,Maven, Junit, SonarQube, Docker, Trivy, AWS S3, Docker Hub, Kubernetes , Slack and Hashicorp Vault,*  to achive the goal.
 
+## Quick Start with Single Command
+
+1. **Download and extract** the `devsecops-project.zip` file
+2. **Run the setup script**:
+   ```bash
+   ./setup.sh
+   ```
+3. **Follow the on-screen instructions** to complete the configuration
+
+The script will automatically start all services and provide access details!
 
 ## Project Architecture
 ![](https://github.com/praveensirvi1212/DevSecOps-project/blob/main/Images/architecture.png)
@@ -36,8 +46,131 @@ if Jenkins fails to create deployment and service in Kubernetes, the whole pipel
 1. Hashicorp Vault
 1. Slack
 
- # Want to create this Project by your own  then *Follow these  project steps*
-## Step: 1 Installation Part 
+# Running the Project Locally in GitHub Codespaces
+
+Since you're running in GitHub Codespaces, you can run the entire DevSecOps setup using Docker Compose without needing to install anything locally or create AWS accounts.
+
+## Prerequisites
+- GitHub Codespaces (which you have)
+- Docker (available in Codespaces)
+
+## Steps to Run
+
+1. **Start the services:**
+   ```sh
+   docker-compose up -d
+   ```
+
+2. **Access Jenkins:**
+   - Open http://localhost:8081 in your browser
+   - Get the initial admin password: `docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
+   - Install suggested plugins
+   - Install additional plugins: SonarQube Scanner
+
+3. **Configure SonarQube:**
+   - Access SonarQube at http://localhost:9000
+   - Default login: admin/admin
+   - Create a project and get the token
+
+4. **Configure Jenkins:**
+   - Add SonarQube server in Jenkins: Manage Jenkins > Configure System > SonarQube servers
+     - Name: SonarQube-server
+     - Server URL: http://sonarqube:9000
+     - Server authentication token: (from SonarQube)
+
+5. **Run the Pipeline:**
+   - Create a new pipeline job in Jenkins
+   - Use the modified Jenkinsfile from this repo
+   - Build the job
+
+6. **Access the Application:**
+   - After successful build, the app will be running on http://localhost:8080
+
+## Notes
+- Docker push is skipped to avoid needing Docker Hub credentials
+- Reports are stored locally in the `reports/` folder
+- No Slack notifications
+- Deployment is local Docker container instead of Kubernetes
+
+# Original Installation Steps (for local machine)
+
+## Pipeline flow:
+1. Jenkins will fetch the code from the remote repo 
+2. Maven will build the code, if the build fails, the whole pipeline will become a failure and Jenkins will notify the user, If build success then 
+3. Junit will do unit testing, if the application passes test cases then will go to the next step otherwise the whole pipeline will become a failureJenkins will notify the user that your build fails.
+4.SonarQube scanner will scan the code and will send the report to the SonarQube server, where the report will go through the quality gate and gives the output to the web Dashboard. 
+                        In the quality gate, we define conditions or rules like how many bugs or vulnerabilities, or code smells should be present in the code. 
+ Also, we have to create a webhook to send the status of quality gate status to Jenkins.
+ If the quality gate status becomes a failure, the whole pipeline will become a failure then Jenkins will notify the user that your build fails.
+5. After the quality gate passes, Docker will build the docker image.
+if the docker build fails when the whole pipeline will become a failure and Jenkins will notify the user that your build fails.
+6. Trivy will scan the docker image, if it finds any Vulnerability then the whole pipeline will become a failure, and the generated report will be sent to s3 for future review and Jenkins will notify the user that your build fails.
+7. After trivy scan docker images will be pushed to the docker hub, if the docker fails to push docker images to the docker hub then the pipeline will become a failure and Jenkins will notify the user that your build fails.
+8. After the docker push, Jenkins will create deployment and service in minikube and our application will be deployed into Kubernetes.
+if Jenkins fails to create deployment and service in Kubernetes, the whole pipeline will become a failure and Jenkins will notify the user that your build fails.
+
+
+### PreRequisites
+1. JDK 
+1. Git 
+1. Github
+1. Jenkins
+1. Sonarqube
+1. Docker
+1. Trivy
+1. AWS account
+1. Docker Hub account
+1. Minikube & Kubectl
+1. Hashicorp Vault
+1. Slack
+
+ # Running the Project Locally in GitHub Codespaces
+
+Since you're running in GitHub Codespaces, you can run the entire DevSecOps setup using Docker Compose without needing to install anything locally or create AWS accounts.
+
+## Prerequisites
+- GitHub Codespaces (which you have)
+- Docker (available in Codespaces)
+
+## Steps to Run
+
+1. **Start the services:**
+   ```sh
+   docker-compose up -d
+   ```
+
+2. **Access Jenkins:**
+   - Open http://localhost:8081 in your browser
+   - Get the initial admin password: `docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
+   - Install suggested plugins
+   - Install additional plugins: SonarQube Scanner
+
+3. **Configure SonarQube:**
+   - Access SonarQube at http://localhost:9000
+   - Default login: admin/admin
+   - Create a project and get the token
+
+4. **Configure Jenkins:**
+   - Add SonarQube server in Jenkins: Manage Jenkins > Configure System > SonarQube servers
+     - Name: SonarQube-server
+     - Server URL: http://sonarqube:9000
+     - Server authentication token: (from SonarQube)
+
+5. **Run the Pipeline:**
+   - Create a new pipeline job in Jenkins
+   - Use the modified Jenkinsfile from this repo
+   - Build the job
+
+6. **Access the Application:**
+   - After successful build, the app will be running on http://localhost:8080
+
+## Notes
+- Docker push is skipped to avoid needing Docker Hub credentials
+- Reports are stored locally in the `reports/` folder
+- No Slack notifications
+- Deployment is local Docker container instead of Kubernetes
+
+# Original Installation Steps (for local machine) 
 
 ### Stage-01 : Install JDK and Create a Java Springboot application
 Push all the web application page code file into github
