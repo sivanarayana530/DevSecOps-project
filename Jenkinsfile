@@ -26,10 +26,9 @@ pipeline {
         }
         stage("Quality Gate") {
             steps {
-              // timeout(time: 1, unit: 'HOURS') {
-                // waitForQualityGate abortPipeline: true
-              // }
-              echo "Quality gate check skipped for testing"
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
             }
         }
         
