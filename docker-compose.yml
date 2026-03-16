@@ -12,7 +12,13 @@ services:
     command: >
       bash -c "
       apt-get update &&
-      apt-get install -y maven docker.io &&
+      apt-get install -y maven docker.io curl &&
+      curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64 &&
+      chmod +x ./kind &&
+      mv ./kind /usr/local/bin/ &&
+      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" &&
+      chmod +x kubectl &&
+      mv kubectl /usr/local/bin/ &&
       usermod -aG docker jenkins &&
       /usr/local/bin/jenkins.sh
       "

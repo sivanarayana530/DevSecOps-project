@@ -56,9 +56,12 @@ pipeline {
                 // sh 'docker rmi praveensirvi/sprint-boot-app:v1.$BUILD_ID praveensirvi/sprint-boot-app:latest'
             }
         }
-        stage('Deploy locally') {
+        stage('Deploy to k8s') {
             steps {
-                sh 'docker run -d -p 8080:8080 --name spring-app praveensirvi/sprint-boot-app:latest'
+                sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
+                sh 'kind load docker-image praveensirvi/sprint-boot-app:latest --name devsecops-cluster'
+                sh 'kubectl apply -f spring-boot-deployment.yaml'
+                sh 'kubectl rollout status deployment/spring-app-deployment'
             }
         }
         
