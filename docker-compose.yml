@@ -12,7 +12,7 @@ services:
     command: >
       bash -c "
       apt-get update &&
-      apt-get install -y maven &&
+      apt-get install -y maven docker.io &&
       /usr/local/bin/jenkins.sh
       "
     networks:
