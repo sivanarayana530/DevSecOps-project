@@ -34,7 +34,7 @@ pipeline {
         
         stage('Docker  Build') {
             steps {
-      	        sh 'docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
+      	        sh 'sudo docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
                 sh 'docker image tag praveensirvi/sprint-boot-app:v1.$BUILD_ID praveensirvi/sprint-boot-app:latest'
             }
         }
@@ -58,10 +58,10 @@ pipeline {
         }
         stage('Deploy to k8s') {
             steps {
-                sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
-                sh 'kind load docker-image praveensirvi/sprint-boot-app:latest --name devsecops-cluster'
-                sh 'kubectl apply -f spring-boot-deployment.yaml'
-                sh 'kubectl rollout status deployment/spring-app-deployment'
+                sh 'sudo kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
+                sh 'sudo kind load docker-image praveensirvi/sprint-boot-app:latest --name devsecops-cluster'
+                sh 'sudo kubectl apply -f spring-boot-deployment.yaml'
+                sh 'sudo kubectl rollout status deployment/spring-app-deployment'
             }
         }
         
