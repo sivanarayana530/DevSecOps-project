@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout git') {
             steps {
-               git branch: 'main', url: 'https://github.com/praveensirvi1212/DevSecOps-project'
+               git branch: 'main', url: 'https://github.com/sivanarayana530/DevSecOps-project.git'
             }
         }
         
@@ -20,7 +20,9 @@ pipeline {
         stage('SonarQube Analysis'){
             steps{
                 withSonarQubeEnv('SonarQube-server') {
-                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key'
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.login=$SONAR_TOKEN'
+                    }
                 }
             }
         }
@@ -34,13 +36,13 @@ pipeline {
         
         stage('Docker  Build') {
             steps {
-      	        sh 'sudo docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
-                sh 'sudo docker image tag praveensirvi/sprint-boot-app:v1.$BUILD_ID praveensirvi/sprint-boot-app:latest'
+      	        sh 'docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
+                sh 'docker image tag praveensirvi/sprint-boot-app:v1.$BUILD_ID praveensirvi/sprint-boot-app:latest'
             }
         }
         stage('Image Scan') {
             steps {
-      	        sh 'sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:latest > report.txt || true'
+      	        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:latest > report.txt || true'
             }
         }
         stage('Store Scan report locally') {
@@ -58,10 +60,11 @@ pipeline {
         }
         stage('Deploy to k8s') {
             steps {
-                sh 'sudo kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
-                sh 'sudo kind load docker-image praveensirvi/sprint-boot-app:latest --name devsecops-cluster'
-                sh 'sudo kubectl apply -f spring-boot-deployment.yaml'
-                sh 'sudo kubectl rollout status deployment/spring-app-deployment'
+                sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
+                sh 'kind load docker-image praveensirvi/sprint-boot-app:latest --name devsecops-cluster'
+                sh 'KIND_IP=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" devsecops-cluster-control-plane) && sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" ~/.kube/config'
+                sh 'kubectl apply -f spring-boot-deployment.yaml'
+                sh 'kubectl rollout status deployment/spring-app-deployment'
             }
         }
         
