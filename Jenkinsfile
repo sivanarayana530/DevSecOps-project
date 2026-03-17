@@ -7,6 +7,12 @@ pipeline {
             }
         }
         
+        stage('Gitleaks Secrets Scan') {
+            steps {
+                sh 'docker run --rm -v ${WORKSPACE}:/path zricethezav/gitleaks:latest detect --source="/path" -v --report-format json --report-path /path/gitleaks-report.json || true'
+            }
+        }
+        
         stage ('Build & JUnit Test') {
             steps {
                 sh 'mvn install' 
@@ -17,6 +23,13 @@ pipeline {
                 }   
             }
         }
+        
+        stage('OWASP Dependency-Check') {
+            steps {
+                sh 'mvn org.owasp:dependency-check-maven:check -Dformat=HTML -Dformat=JSON || true'
+            }
+        }
+        
         stage('SonarQube Analysis'){
             steps{
                 withSonarQubeEnv('SonarQube-server') {
@@ -31,6 +44,12 @@ pipeline {
               timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true
               }
+            }
+        }
+        
+        stage('Semgrep SAST Scan') {
+            steps {
+                sh 'docker run --rm -v "${WORKSPACE}:/src" returntocorp/semgrep semgrep scan --config auto --json -o /src/semgrep-report.json || true'
             }
         }
         
