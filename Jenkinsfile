@@ -75,7 +75,7 @@ pipeline {
 
         stage('Deploy to k8s') {
             steps {
-                sh 'kind create cluster --name devsecops-cluster-$BUILD_ID --network devsecops --config kind-config.yaml || true'
+                sh 'kind create cluster --name devsecops-cluster-$BUILD_ID --config kind-config.yaml || true'
                 sh 'kind load docker-image praveensirvi/sprint-boot-app:v1.$BUILD_ID --name devsecops-cluster-$BUILD_ID'
                 sh 'KIND_IP=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" devsecops-cluster-$BUILD_ID-control-plane) && sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" ~/.kube/config'
                 sh 'sed -i "s/latest/v1.$BUILD_ID/g" spring-boot-deployment.yaml'
