@@ -26,15 +26,15 @@ pipeline {
         
         
         
-        stage('SonarQube Analysis'){
-            steps{
-                withSonarQubeEnv('SonarQube-server') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.login=$SONAR_TOKEN'
-                    }
-                }
+        steps{
+        withSonarQubeEnv('SonarQube-server') {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                // Updated -Dsonar.login to -Dsonar.token
+                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.token=$SONAR_TOKEN'
             }
         }
+    }
+}
         stage("Quality Gate") {
             steps {
               timeout(time: 1, unit: 'HOURS') {
