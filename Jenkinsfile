@@ -75,11 +75,25 @@ pipeline {
 
         stage('Deploy to k8s') {
             steps {
-                sh 'kind create cluster --name devsecops-cluster-$BUILD_ID --config kind-config.yaml || true'
-                sh 'sleep 30'  // Wait for cluster to be fully ready
+                sh 'kind create cluster --name devsecops-cluster-$BUILD_ID --config kind-config.yaml'
+                sh 'echo "Waiting for Kind cluster to be ready..."'
+                sh 'sleep 60'  // Increased wait time for cluster initialization
+                sh 'kind get clusters'  // Verify cluster exists
                 sh 'kind load docker-image praveensirvi/sprint-boot-app:v1.$BUILD_ID --name devsecops-cluster-$BUILD_ID'
-                sh 'KIND_IP=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" devsecops-cluster-$BUILD_ID-control-plane) && sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" ~/.kube/config'
-                sh 'kubectl cluster-info --request-timeout=30s'  // Test connection before applying manifests
+                sh 'KIND_IP=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" devsecops-cluster-$BUILD_ID-control-plane) && echo "Kind cluster IP: $KIND_IP" && sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" ~/.kube/config'
+                sh 'kubectl config current-context'  // Show current context
+                sh '''
+                for i in {1..10}; do
+                  echo "Attempt $i: Testing kubectl connection..."
+                  if kubectl cluster-info --request-timeout=30s; then
+                    echo "Cluster is ready!"
+                    break
+                  else
+                    echo "Cluster not ready yet, waiting 10 seconds..."
+                    sleep 10
+                  fi
+                done
+                '''
                 sh 'sed -i "s/latest/v1.$BUILD_ID/g" spring-boot-deployment.yaml'
                 sh 'kubectl apply -f spring-boot-deployment.yaml --validate=false'
                 sh 'kubectl rollout status deployment/spring-app-deployment --timeout=300s'
