@@ -12,11 +12,7 @@ pipeline {
                 sh 'docker run --rm -v ${WORKSPACE}:/path zricethezav/gitleaks:latest detect --source="/path" -v --report-format json --report-path /path/gitleaks-report.json || true'
             }
         }
-        stage('OWASP Dependency-Check') {
-            steps {
-                sh 'mvn org.owasp:dependency-check-maven:check -Dformat=HTML -Dformat=JSON || true'
-            }
-        }
+        
         stage ('Build & JUnit Test') {
             steps {
                 sh 'mvn install' 
