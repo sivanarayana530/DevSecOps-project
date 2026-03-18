@@ -8,7 +8,5 @@ nodes:
     nodeRegistration:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
-  extraPortMappings:
-  - containerPort: 30080
-    hostPort: 30080
-    protocol: TCP
+  # Avoid binding to privileged host ports (80/443) in the dev container environment.
+  # If you need host access to the ingress, adjust these to unused high ports.
