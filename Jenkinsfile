@@ -24,16 +24,16 @@ pipeline {
             }
         }
         
-        
-        
-        steps{
-        withSonarQubeEnv('SonarQube-server') {
-            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                // Updated -Dsonar.login to -Dsonar.token
-                sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.token=$SONAR_TOKEN'
+        stage('SonarQube Analysis'){
+            steps{
+                withSonarQubeEnv('SonarQube-server') {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        // Using -Dsonar.token to avoid deprecation warnings
+                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.token=$SONAR_TOKEN'
+                    }
+                }
             }
         }
-    }
 
         stage("Quality Gate") {
             steps {
@@ -49,29 +49,30 @@ pipeline {
             }
         }
         
-        stage('Docker  Build') {
+        stage('Docker Build') {
             steps {
-      	        sh 'docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
+                sh 'docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
             }
         }
+
         stage('Image Scan') {
             steps {
-      	        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:v1.$BUILD_ID > report.txt || true'
+                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:v1.$BUILD_ID > report.txt || true'
             }
         }
+
         stage('Store Scan report locally') {
-              steps {
-                  sh 'mkdir -p reports && cp report.txt reports/'
-              }
+             steps {
+                 sh 'mkdir -p reports && cp report.txt reports/'
+             }
          }
-        stage('Docker  Push') {
+
+        stage('Docker Push') {
             steps {
                 sh 'echo "Skipping Docker push to avoid needing credentials"'
-                // sh 'docker push praveensirvi/sprint-boot-app:v1.$BUILD_ID'
-                // sh 'docker push praveensirvi/sprint-boot-app:latest'
-                // sh 'docker rmi praveensirvi/sprint-boot-app:v1.$BUILD_ID praveensirvi/sprint-boot-app:latest'
             }
         }
+
         stage('Deploy to k8s') {
             steps {
                 sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
@@ -82,15 +83,11 @@ pipeline {
                 sh 'kubectl rollout status deployment/spring-app-deployment'
             }
         }
-        
- 
     }
-    post{
-        always{
-            echo "Pipeline completed"
-            // sendSlackNotifcation()
-            }
-        }
-}
 
-    
+    post {
+        always {
+            echo "Pipeline completed"
+        }
+    }
+}
