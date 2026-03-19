@@ -50,13 +50,13 @@ pipeline {
         
         stage('Docker Build') {
             steps {
-                sh 'docker build -t praveensirvi/sprint-boot-app:v1.$BUILD_ID .'
+                sh "docker build -t praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} ."
             }
         }
 
         stage('Image Scan') {
             steps {
-                sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:v1.$BUILD_ID > report.txt || true'
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
             }
         }
 
@@ -73,28 +73,29 @@ pipeline {
         }
 
         stage('Deploy to k8s') {
-    steps {
-        script {
-            // 1. Create cluster if not exists
-            sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
-            
-            // 2. Load the image directly into Kind
-            sh "kind load docker-image praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} --name devsecops-cluster"
-            
-            // 3. Get the internal IP and create a temporary config for this build
-            sh '''
-                KIND_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' devsecops-cluster-control-plane)
-                kind get kubeconfig --name devsecops-cluster > build-kubeconfig
-                sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" build-kubeconfig
-            '''
-            
-            // 4. Use the specific config for deployment
-            sh "sed -i 's/latest/v1.${env.BUILD_ID}/g' spring-boot-deployment.yaml"
-            sh 'KUBECONFIG=./build-kubeconfig kubectl apply -f spring-boot-deployment.yaml'
-            sh 'KUBECONFIG=./build-kubeconfig kubectl rollout status deployment/spring-app-deployment'
+            steps {
+                script {
+                    // 1. Create cluster if not exists
+                    sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
+                    
+                    // 2. Load the image directly into Kind
+                    sh "kind load docker-image praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} --name devsecops-cluster"
+                    
+                    // 3. Get the internal IP and create a temporary config for this build
+                    sh '''
+                        KIND_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' devsecops-cluster-control-plane)
+                        kind get kubeconfig --name devsecops-cluster > build-kubeconfig
+                        sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" build-kubeconfig
+                    '''
+                    
+                    // 4. Use the specific config for deployment
+                    sh "sed -i 's/latest/v1.${env.BUILD_ID}/g' spring-boot-deployment.yaml"
+                    sh 'KUBECONFIG=./build-kubeconfig kubectl apply -f spring-boot-deployment.yaml'
+                    sh 'KUBECONFIG=./build-kubeconfig kubectl rollout status deployment/spring-app-deployment'
+                }
+            }
         }
-    }
-} // <--- THIS WAS MISSING: Closes the 'stages' block
+    } // Closes 'stages'
 
     post {
         always {
