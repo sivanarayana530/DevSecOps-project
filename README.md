@@ -1,3 +1,9 @@
+docker rm -f kind-proxy-spring ; docker run -d --name kind-proxy-spring --network kind -p 30080:30080 alpine/socat tcp-listen:30080,fork,reuseaddr tcp-connect:devsecops-cluster-control-plane:30080
+
+
+
+
+
 # DevSecOps-Project
 
 In this project, I created an end-to-end CI/CD pipeline while keeping in mind Securities Best Practices, DevSecOps principles and used all these tools *Git, GitHub , Jenkins,Maven, Junit, SonarQube, Docker, Trivy, AWS S3, Docker Hub, Kubernetes , Slack and Hashicorp Vault,*  to achive the goal.
