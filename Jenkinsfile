@@ -18,7 +18,7 @@ pipeline {
                 sh 'mvn install' 
             }
             post {
-               success {
+                success {
                     junit 'target/surefire-reports/**/*.xml'
                 }   
             }
@@ -28,7 +28,6 @@ pipeline {
             steps{
                 withSonarQubeEnv('SonarQube-server') {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        // Using -Dsonar.token to avoid deprecation warnings
                         sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=devsecops-project-key -Dsonar.token=$SONAR_TOKEN'
                     }
                 }
@@ -83,6 +82,7 @@ pipeline {
                 sh 'kubectl rollout status deployment/spring-app-deployment'
             }
         }
+    } // <--- THIS WAS MISSING: Closes the 'stages' block
 
     post {
         always {
